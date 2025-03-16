@@ -1,13 +1,16 @@
-import express from "express";
+import express, { urlencoded } from "express";
 import session from "express-session";
 import "dotenv/config";
 import morgan from "morgan";
-
+import connectDb from "./src/config/db.js";
 const app = express();
 const port = process.env.PORT || 5000;
 
+connectDb();
+
 app.use(morgan("combined"));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
