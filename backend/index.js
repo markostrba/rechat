@@ -6,7 +6,8 @@ import MongoStore from "connect-mongo";
 import mongoose from "mongoose";
 import connectDb from "./src/config/db.js";
 import passport from "./src/config/passport.js";
-
+import authRouter from "./src/routes/auth.js";
+import { xss } from "express-xss-sanitizer";
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -15,6 +16,7 @@ connectDb();
 app.use(morgan("combined"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(xss());
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -31,6 +33,8 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use("/api/auth", authRouter);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
