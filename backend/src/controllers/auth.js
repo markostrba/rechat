@@ -49,6 +49,42 @@ export async function logout(req, res) {
     if (err) {
       return res.status(400).json({ message: "Logout unsuccessful" });
     }
+    res.clearCookie("connect.sid", { path: "/" });
     return res.status(200).json({ message: "Logout successful" });
   });
+}
+
+export async function verifyEmail(req, res) {
+  try {
+    const { code, email } = req.body;
+
+    const existingUser = await User.findOne({ email });
+
+    if (!existingUser) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    if (existingUser.isVerified) {
+      return res.status(400).json({ message: "User is already verified" });
+    }
+
+    if (existingUser.expVerifCode < Date.now()) {
+      return res.status(400).json({ message: "Expired verification code" });
+    }
+
+    if (existingUser.verifCode !== code) {
+      return res.status(400).json({ message: "Invalid verification code" });
+    }
+
+    existingUser.isVerified = true;
+    existingUser.expVerifCode = null;
+    existingUser.verifCode = null;
+
+    await existingUser.save();
+
+    res.status(200).json({ message: "User verified successfully" });
+  } catch (err) {
+    console.error("Error in verify-email route", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
 }

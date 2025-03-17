@@ -34,3 +34,17 @@ export function validateSignup(req, res, next) {
 
   next();
 }
+
+export function validateVerifyEmail(req, res, next) {
+  const schema = Joi.object({
+    code: Joi.string().min(6).max(6).alphanum().required(),
+    email: Joi.string().email().required(),
+  });
+
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
+  }
+
+  next();
+}

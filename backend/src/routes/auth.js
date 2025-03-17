@@ -1,11 +1,16 @@
 import express from "express";
-import { validateLogin, validateSignup } from "../middlewares/validateAuth.js";
-import { login, register } from "../controllers/auth.js";
+import {
+  validateLogin,
+  validateSignup,
+  validateVerifyEmail,
+} from "../middlewares/validateAuth.js";
+import { login, logout, register, verifyEmail } from "../controllers/auth.js";
 import passport from "../config/passport.js";
 const router = express.Router();
 
 router.post("/login", validateLogin, passport.authenticate("local"), login);
 router.post("/register", validateSignup, register);
-router.post("/logout");
+router.post("/logout", logout);
+router.post("/verify-email", validateVerifyEmail, verifyEmail);
 
 export default router;
