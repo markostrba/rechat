@@ -88,3 +88,20 @@ export async function verifyEmail(req, res) {
     res.status(500).json({ message: "Internal server error" });
   }
 }
+
+export async function getMe(req, res) {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    res.status(200).json({
+      username: req.user.username,
+      email: req.user.email,
+      isVerified: req.user.isVerified,
+    });
+  } catch (err) {
+    console.error("Error in 'me' route", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
