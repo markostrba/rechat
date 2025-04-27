@@ -19,6 +19,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { toast } from "sonner";
+import { useAuthStore } from "@/store/useAuthStore";
+import { Link, useNavigate } from "react-router";
 
 const registerSchema = z
   .object({
@@ -47,10 +50,10 @@ const registerSchema = z
     path: ["confirmPassword"],
   });
 
-type IRegisterForm = z.infer<typeof registerSchema>;
+type TRegisterForm = z.infer<typeof registerSchema>;
 
 const RegisterForm = () => {
-  const form = useForm<IRegisterForm>({
+  const form = useForm<TRegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: "",
@@ -59,8 +62,30 @@ const RegisterForm = () => {
       confirmPassword: "",
     },
   });
+  const register = useAuthStore((state) => state.register);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const navigate = useNavigate();
 
-  const onSubmit: SubmitHandler<IRegisterForm> = (data) => console.log(data);
+  const onSubmit: SubmitHandler<TRegisterForm> = async (data) => {
+    try {
+      console.log(data);
+      const { success, message } = await register(
+        data.email,
+        data.password,
+        data.username
+      );
+      form.reset();
+
+      if (success) {
+        toast.success(message);
+        navigate("/login");
+      } else {
+        toast.error(message);
+      }
+    } catch (err) {
+      console.log("error in submit", err);
+    }
+  };
 
   return (
     <>
@@ -78,7 +103,7 @@ const RegisterForm = () => {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-2"
+                className="space-y-2 text-left"
               >
                 <FormField
                   name="email"
@@ -145,6 +170,7 @@ const RegisterForm = () => {
                 <Button
                   type="submit"
                   className="w-full cursor-pointer mt-2 font-medium py-5"
+                  disabled={isLoading}
                 >
                   Sign Up
                 </Button>
@@ -152,7 +178,12 @@ const RegisterForm = () => {
             </Form>
           </CardContent>
         </Card>
-        <span>Already have an account? Log in </span>
+        <span>
+          Already have an account?
+          <Link to="/login" className="ml-1 text-blue-500 hover:opacity-70">
+            Log in
+          </Link>
+        </span>
       </div>
     </>
   );

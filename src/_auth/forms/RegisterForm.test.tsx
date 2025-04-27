@@ -1,12 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-
-import RegisterForm from "./RegisterForm.component";
 import "@testing-library/jest-dom";
+import { describe, it, expect, beforeEach } from "vitest";
+import RegisterForm from "./RegisterForm.component";
+import { MemoryRouter } from "react-router";
 
-describe("RegisterForm", () => {
+describe("RegisterForm - Unit tests", () => {
   beforeEach(() => {
-    render(<RegisterForm />);
+    render(
+      <MemoryRouter>
+        <RegisterForm />
+      </MemoryRouter>
+    );
   });
 
   it("renders form fields and submit button", () => {
