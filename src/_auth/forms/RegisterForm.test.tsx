@@ -23,7 +23,6 @@ describe("RegisterForm - Unit tests", () => {
     expect(getPassword()).toBeInTheDocument();
     expect(getConfirmPassword()).toBeInTheDocument();
     expect(getRegisterButton()).toBeInTheDocument();
-    expect(getRegisterButton());
   });
   it("shows errors on empty fields", async () => {
     await userEvent.click(getRegisterButton());

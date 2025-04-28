@@ -1,7 +1,7 @@
 import { auth, db } from "@/lib/firebase/config"
-import { doc, setDoc } from "firebase/firestore";
-import { signOut, createUserWithEmailAndPassword } from "firebase/auth"
-
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
+import { toast } from "sonner";
 import {create } from "zustand"
 import { mapFirebaseError } from "@/lib/mapFirebaseError";
 
@@ -16,51 +16,109 @@ type TUser = {
 type TAuthState = {
   user: TUser | null,
   isAuthenticated: boolean,
-  isLoading: boolean,
-  register: (email: string, password: string, username: string) => Promise<{success: boolean, message: string}>,
+  isPageLoading: boolean,
+  isFormLoading: boolean,
+  register: (email: string, password: string, username: string) => Promise<boolean>,
+  login: (email: string, password: string) => Promise<boolean>,
   logout: () => Promise<void>,
   listenAuthState: () => void,
 }
 
-export const useAuthStore = create<TAuthState>()(set => ({
-  user: null,
-  isAuthenticated: false,
-  isLoading: false,
+export const useAuthStore = create<TAuthState>()(
+    set => ({
+      user: null,
+      isAuthenticated: false,
+      isPageLoading: false,
+      isFormLoading: false,
+    
+      register: async (email, password, username) => {
+        set({isFormLoading: true})
+        try {
+          const res = await createUserWithEmailAndPassword(auth, email, password);
+          const firebaseUser = res.user;
+          const userDocRef = doc(db, "users", firebaseUser.uid);
+          await setDoc(userDocRef, {
+            userId: firebaseUser.uid,
+            username: username,
+            photoUrl: "",
+          })
+    
+          toast.success("Sign up successful")
+          return true
+        } catch (err: any) {
+          console.error("Error inside of register AuthStore", err.message)
+          toast.error(mapFirebaseError(err.code))
+          return false
+        } finally {
+          set({isFormLoading: false})
+        }
+      },
+      login: async (email, password) => {
+        set({isFormLoading: true})
+        
+        try {
+          const res = await signInWithEmailAndPassword(auth, email, password);
 
-  register: async (email, password, username) => {
-    set({isLoading: true})
-    try {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = res.user;
-      const userDocRef = doc(db, "users", firebaseUser.uid);
-      await setDoc(userDocRef, {
-        userId: firebaseUser.uid,
-        username: username,
-        photoUrl: "",
-      })
+          const {uid, email: userEmail} = res.user;
 
-      console.log("Sign up successful!");
-      return {success: true, message: "Sign up successful."}
-    } catch (err: any) {
-      console.error("Error inside of register AuthStore", err.message)
-      return {success: false, message: mapFirebaseError(err.code)}
-    } finally {
-      set({isLoading: false})
-    }
-  },
 
-  logout: async () => {
-    set({isLoading: true})
-    try {
-      await signOut(auth),
-      set({user: null,isAuthenticated: false, isLoading: false})
-      return "Log out successful"
-    } catch (err: any) {
-      console.error("Error inside of logout AuthStore", err);
-      return err.message
-    }
-  },
+          set({user: {userId: uid, username: "", email: userEmail!, photoUrl: ""}, isAuthenticated: true})
+          toast.success("Sign in successful")
+          return true
+        } catch (err: any) {
+          console.error("Error inside of login AuthStore", err.message)
+          toast.error(mapFirebaseError(err.code))
+          return false
+        } finally {
+          set({isFormLoading: false})
+        }
+      },
+      logout: async () => {
+        set({isFormLoading: true})
+        try {
+          await signOut(auth),
+          set({user: null,isAuthenticated: false, isFormLoading: false})
+          return "Log out successful"
+        } catch (err: any) {
+          console.error("Error inside of logout AuthStore", err);
+          return err.message
+        } finally {
+          set({isFormLoading: false})
+        }
+      },
+    
+      listenAuthState: () => {
+        set({isPageLoading: true})
+        const unsubcribe = onAuthStateChanged(auth, async (user) => {
+          if (!user) return set({user: null, isAuthenticated: false});
+    
+          try {
+            const userDocRef = doc(db, "users", user.uid); 
+            const docSnap = await getDoc(userDocRef);
+            const userData = docSnap.data();
 
-  listenAuthState: () => {},
+            if (!userData) {
+              console.error("No user data found")
+              return set({user: null, isAuthenticated: false})
+            }
 
-}))
+            set({user: {
+              userId: user.uid,
+              username: userData.username,
+              email: user.email!,
+              photoUrl: userData.photoUrl
+            },isAuthenticated: true})
+          } catch (err) {
+            console.error(err)
+            toast.error(mapFirebaseError())
+          } finally {
+            set({isPageLoading: false})
+          }
+        })
+    
+        return unsubcribe
+      },
+    
+    }),
+
+)
