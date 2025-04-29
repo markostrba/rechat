@@ -6,6 +6,7 @@ import LoginForm from "./_auth/forms/LoginForm.componenent";
 import { useAuthStore } from "./store/useAuthStore";
 import { ReactNode, useEffect } from "react";
 import ForgotPasswordForm from "./_auth/forms/ForgotPasswordForm.component";
+import RootPage from "./_root/RootPage";
 
 interface IProtectedRouteProps {
   children: ReactNode;
@@ -39,7 +40,7 @@ function App() {
           index
           element={
             <ProtectedRoute>
-              <div>chat</div>
+              <RootPage />
             </ProtectedRoute>
           }
         />
