@@ -1,6 +1,6 @@
 import { auth, db } from "@/lib/firebase/config"
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
+import { signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth"
 import { toast } from "sonner";
 import {create } from "zustand"
 import { mapFirebaseError } from "@/lib/mapFirebaseError";
@@ -21,6 +21,7 @@ type TAuthState = {
   register: (email: string, password: string, username: string) => Promise<boolean>,
   login: (email: string, password: string) => Promise<boolean>,
   logout: () => Promise<void>,
+  forgotPassword: (email: string) => Promise<void>,
   listenAuthState: () => void,
 }
 
@@ -86,13 +87,23 @@ export const useAuthStore = create<TAuthState>()(
           set({isFormLoading: false})
         }
       },
+      forgotPassword: async (email) => {
+        set({isFormLoading: true})
+        try {
+          await sendPasswordResetEmail(auth, email)
+        } catch (err) {
+          console.error(err)
+        } finally {
+          set({isFormLoading: false})
+          toast.success("A password reset link has been sent if the email is associated with an account.")
+        }
+      },
     
       listenAuthState: () => {
         set({isPageLoading: true})
         const unsubcribe = onAuthStateChanged(auth, async (user) => {
-          if (!user) return set({user: null, isAuthenticated: false});
-    
           try {
+            if (!user) {set({user: null, isAuthenticated: false}); return}    
             const userDocRef = doc(db, "users", user.uid); 
             const docSnap = await getDoc(userDocRef);
             const userData = docSnap.data();
@@ -109,7 +120,7 @@ export const useAuthStore = create<TAuthState>()(
               photoUrl: userData.photoUrl
             },isAuthenticated: true})
           } catch (err) {
-            console.error(err)
+            console.error("Fsfsf",err)
             toast.error(mapFirebaseError())
           } finally {
             set({isPageLoading: false})

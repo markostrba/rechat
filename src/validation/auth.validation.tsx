@@ -36,3 +36,7 @@ export const registerSchema = z
     message: "Passwords must match",
     path: ["confirmPassword"],
   });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email({ message: "Enter a valid email" }),
+});

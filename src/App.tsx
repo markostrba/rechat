@@ -5,6 +5,7 @@ import RegisterForm from "./_auth/forms/RegisterForm.component";
 import LoginForm from "./_auth/forms/LoginForm.componenent";
 import { useAuthStore } from "./store/useAuthStore";
 import { ReactNode, useEffect } from "react";
+import ForgotPasswordForm from "./_auth/forms/ForgotPasswordForm.component";
 
 interface IProtectedRouteProps {
   children: ReactNode;
@@ -32,6 +33,7 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/register" element={<RegisterForm />} />
           <Route path="/login" element={<LoginForm />} />
+          <Route path="/forgot-password" element={<ForgotPasswordForm />} />
         </Route>
         <Route
           index
