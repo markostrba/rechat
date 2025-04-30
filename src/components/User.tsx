@@ -1,43 +1,58 @@
-import Status, { TStatusTypes } from "@/components/status"
+import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AvatarBadge, { TAvatarBadgeTypes } from "./AvatarBadge";
 
-import { ReactNode } from "react"
-
-
-interface IUserProps {
-    name: string,
-    photourl: string | undefined,
-    status: TStatusTypes,
-    showStatus?: boolean,
-    description?: string,
-    className?: string,
+interface IUserProps extends React.HTMLAttributes<HTMLDivElement> {
+  name: string;
+  photourl: string | undefined;
+  badge: TAvatarBadgeTypes;
+  showBadge?: boolean;
+  description?: string;
 }
 
-const User = ({name, photourl, status, showStatus = true, description, className}: IUserProps) => {
-  console.log("sdsf", photourl)
-  
+const User = React.forwardRef<HTMLDivElement, IUserProps>(
+  (
+    {
+      name,
+      photourl,
+      badge,
+      showBadge = true,
+      description,
+      className,
+      ...props
+    },
+    ref
+  ) => {
     return (
-    <div className={`flex items-center gap-2 ${className}`}>
-    <div className="relative">
-        <Avatar className="size-15">
+      <div
+        ref={ref}
+        className={`flex items-center gap-2 ${className}`}
+        role="button"
+        tabIndex={0}
+        {...props}
+      >
+        <div className="relative">
+          <Avatar className="size-15">
             <AvatarImage src={photourl} />
             <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
+          </Avatar>
 
-        {showStatus &&         <Status status={status} className="absolute right-[0.125rem] bottom-2" />   
-        }
+          {showBadge && (
+            <AvatarBadge
+              badge="settings"
+              className="absolute right-[0.125rem] bottom-1"
+            />
+          )}
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xl">{name}</span>
+          {description && (
+            <span className="text-lg leading-none">{description}</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+);
 
-    </div>
-    <div className="flex flex-col">
-
-         <span className="text-xl">{name}</span>
-         {description && <span className="text-lg leading-none">{description}</span>}
-    </div>
-
-
-
-    </div>
-  )
-}
-
-export default User
+export default User;

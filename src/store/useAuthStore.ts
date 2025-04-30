@@ -6,7 +6,7 @@ import {create } from "zustand"
 import { mapFirebaseError } from "@/lib/mapFirebaseError";
 
 
-type TUser = {
+export type TUser = {
   userId: string,
   username: string,
   email: string,
