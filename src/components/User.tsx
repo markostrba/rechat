@@ -8,6 +8,7 @@ interface IUserProps extends React.HTMLAttributes<HTMLDivElement> {
   badge: TAvatarBadgeTypes;
   showBadge?: boolean;
   description?: string;
+  avatarSize?: string;
 }
 
 const User = React.forwardRef<HTMLDivElement, IUserProps>(
@@ -18,7 +19,9 @@ const User = React.forwardRef<HTMLDivElement, IUserProps>(
       badge,
       showBadge = true,
       description,
+      avatarSize,
       className,
+
       ...props
     },
     ref
@@ -32,7 +35,7 @@ const User = React.forwardRef<HTMLDivElement, IUserProps>(
         {...props}
       >
         <div className="relative">
-          <Avatar className="size-15">
+          <Avatar className={`size-15 ${avatarSize}`}>
             <AvatarImage src={photourl} />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
@@ -45,7 +48,7 @@ const User = React.forwardRef<HTMLDivElement, IUserProps>(
           )}
         </div>
         <div className="flex flex-col">
-          <span className="text-xl">{name}</span>
+          <span className="text-lg font-medium">{name}</span>
           {description && (
             <span className="text-lg leading-none">{description}</span>
           )}

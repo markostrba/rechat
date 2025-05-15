@@ -1,5 +1,5 @@
 import { auth, db } from "@/lib/firebase/config"
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth"
 import { toast } from "sonner";
 import {create } from "zustand"
@@ -11,6 +11,7 @@ export type TUser = {
   username: string,
   email: string,
   photoUrl: string,
+  status: "online" | "offline"
 }
 
 type TAuthState = {
@@ -26,7 +27,7 @@ type TAuthState = {
 }
 
 export const useAuthStore = create<TAuthState>()(
-    set => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       isPageLoading: false,
@@ -37,11 +38,11 @@ export const useAuthStore = create<TAuthState>()(
         try {
           const res = await createUserWithEmailAndPassword(auth, email, password);
           const firebaseUser = res.user;
-          const userDocRef = doc(db, "users", firebaseUser.uid);
-          await setDoc(userDocRef, {
+          await setDoc(doc(db, "users", firebaseUser.uid), {
             userId: firebaseUser.uid,
             username: username,
             photoUrl: "",
+            status: "offline"
           })
     
           toast.success("Sign up successful")
@@ -62,8 +63,11 @@ export const useAuthStore = create<TAuthState>()(
 
           const {uid, email: userEmail} = res.user;
 
+          await updateDoc(doc(db, "users", uid), {
+            status: "online"
+          })
 
-          set({user: {userId: uid, username: "", email: userEmail!, photoUrl: ""}, isAuthenticated: true})
+          set({user: {userId: uid, username: "", email: userEmail!, photoUrl: "", status: "online"}, isAuthenticated: true})
           toast.success("Sign in successful")
           return true
         } catch (err: any) {
@@ -77,6 +81,10 @@ export const useAuthStore = create<TAuthState>()(
       logout: async () => {
         set({isFormLoading: true})
         try {
+          const uid = get().user?.userId;
+          if (uid) {
+            await updateDoc(doc(db, "users", uid), { status: "offline" });
+          }
           await signOut(auth),
           set({user: null,isAuthenticated: false, isFormLoading: false})
           return "Log out successful"
@@ -117,7 +125,8 @@ export const useAuthStore = create<TAuthState>()(
               userId: user.uid,
               username: userData.username,
               email: user.email!,
-              photoUrl: userData.photoUrl
+              photoUrl: userData.photoUrl,
+              status: userData.status,
             },isAuthenticated: true})
           } catch (err) {
             console.error("Fsfsf",err)
