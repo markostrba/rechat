@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/popover";
 import ButtonIcon from "@/components/ButtonIcon";
 import SearchBox from "../../components/SearchBox";
-import FriendRequests from "./FriendRequests";
+import FriendRequests from "../friendRequests/FriendRequests";
 import { TUser, useAuthStore } from "@/store/useAuthStore";
 import { searchUsers } from "./friendServices";
 import UserList from "./UserList";
@@ -104,7 +104,7 @@ const AddFriendPopover = () => {
               />
             </div>
           ) : (
-            <FriendRequests open={isOpen} />
+            <FriendRequests />
           )}
         </div>
       </PopoverContent>

@@ -10,7 +10,8 @@ import {
   getDoc,
   limit,
 } from "firebase/firestore";
-import { Friend, FriendRequest, User } from "./types";
+import { Friend, FriendRequest } from "./types";
+import { friendConverter } from "@/converters/friendConverter";
 
 
 export const searchUsers = async (input: string, currentUserId: string)  => {
@@ -38,7 +39,18 @@ export const searchUsers = async (input: string, currentUserId: string)  => {
   return result
 };
 
-export const sendFriendRequest = async (friendId: string, currentUserId: string) => {
+export const sendFriendRequest = async (friendId: string, currentUserId: string): Promise<void> => {
+  const currentUserFriendRef = doc(db, "users", currentUserId, "friends", friendId).withConverter(friendConverter);
+  const friendRef = doc(db, "users", friendId, "friends", currentUserId).withConverter(friendConverter);
+
+  const currentUserFriendSnapshot = await getDoc(currentUserFriendRef);
+  const friendSnapshot = await getDoc(friendRef);
+
+  if (!friendSnapshot.exists()) {
+    throw new Error("Friend not found");
+  }
+  
+
   const currentUserFriendDoc = doc(db, "users", currentUserId, "friends", friendId)
   const friendUserFriendDoc = doc(db, "users", friendId, "friends", currentUserId)
 
